@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gerar Proposta PagBank</title>
+</head>
+<body>
+  <h1>Gerar Proposta PagBank</h1>
+  <form method="POST" action="/gerar-pdf">
+    <label>CNPJ: <input name="cnpj" required /></label><br /><br />
+    <label>Razão Social: <input name="razaoSocial" required /></label><br /><br />
+    <label>Nome Fantasia: <input name="nomeFantasia" required /></label><br /><br />
+    <button type="submit">Gerar PDF</button>
+  </form>
+</body>
+</html>
