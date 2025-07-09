@@ -6,10 +6,16 @@
 </head>
 <body>
   <h1>Gerar Proposta PagBank</h1>
-  <form method="POST" action="/gerar-pdf">
-    <label>CNPJ: <input name="cnpj" required /></label><br /><br />
-    <label>Razão Social: <input name="razaoSocial" required /></label><br /><br />
-    <label>Nome Fantasia: <input name="nomeFantasia" required /></label><br /><br />
+  <form action="/gerar-pdf" method="POST">
+    <label for="cnpj">CNPJ:</label><br />
+    <input type="text" id="cnpj" name="cnpj" required /><br /><br />
+
+    <label for="razaoSocial">Razão Social:</label><br />
+    <input type="text" id="razaoSocial" name="razaoSocial" required /><br /><br />
+
+    <label for="nomeFantasia">Nome Fantasia:</label><br />
+    <input type="text" id="nomeFantasia" name="nomeFantasia" required /><br /><br />
+
     <button type="submit">Gerar PDF</button>
   </form>
 </body>

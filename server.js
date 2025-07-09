@@ -4,7 +4,6 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import { format, utcToZonedTime } from "date-fns-tz";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,6 +12,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "views", "index.html"));
@@ -29,12 +30,13 @@ app.post("/gerar-pdf", async (req, res) => {
   const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  let cursorY = height - 10;
+  // Layout y cursor
+  let cursorY = height - 70;
 
-  // Adiciona logo
-  const logoBytes = fs.readFileSync(path.join(__dirname, "logo-pagbank.png"));
+  // Embed logo
+  const logoBytes = fs.readFileSync(path.join(__dirname, "public", "logo-pagbank.png"));
   const pngImage = await pdfDoc.embedPng(logoBytes);
-  const pngDims = pngImage.scale(0.22);
+  const pngDims = pngImage.scale(0.3);
 
   page.drawImage(pngImage, {
     x: (width - pngDims.width) / 2,
@@ -43,11 +45,11 @@ app.post("/gerar-pdf", async (req, res) => {
     height: pngDims.height,
   });
 
-  cursorY -= pngDims.height + 20;
+  cursorY -= pngDims.height + 30;
 
-  // Título
+  // Title
   const title = "Proposta Comercial";
-  const titleSize = 22;
+  const titleSize = 26;
   const titleWidth = fontBold.widthOfTextAtSize(title, titleSize);
 
   page.drawText(title, {
@@ -58,58 +60,53 @@ app.post("/gerar-pdf", async (req, res) => {
     color: rgb(0, 0, 0),
   });
 
-  cursorY -= 30;
+  cursorY -= 50;
 
-  // Dados da empresa
+  // Company info
   page.drawText(`CNPJ: ${cnpj}`, {
     x: 50,
     y: cursorY,
-    size: 11,
+    size: 12,
     font: fontRegular,
     color: rgb(0, 0, 0),
   });
 
-  cursorY -= 20;
+  cursorY -= 22;
 
   page.drawText(`Razão Social: ${razaoSocial}`, {
     x: 50,
     y: cursorY,
-    size: 11,
-    font: fontBold,
-    color: rgb(0, 0, 0),
-  });
-
-  cursorY -= 16;
-
-  page.drawText(`Nome Fantasia: ${nomeFantasia}`, {
-    x: 50,
-    y: cursorY,
-    size: 11,
+    size: 12,
     font: fontBold,
     color: rgb(0, 0, 0),
   });
 
   cursorY -= 20;
 
-  // Data/Hora com fuso horário de São Paulo
-  const timeZone = "America/Sao_Paulo";
-  const now = new Date();
-  const zonedDate = utcToZonedTime(now, timeZone);
-  const formattedDate = format(zonedDate, "dd/MM/yyyy, HH:mm:ss", { timeZone });
-
-  const dataHora = `Data/Hora: ${formattedDate} (Horário SP)`;
-
-  page.drawText(dataHora, {
+  page.drawText(`Nome Fantasia: ${nomeFantasia}`, {
     x: 50,
     y: cursorY,
-    size: 11,
+    size: 12,
+    font: fontBold,
+    color: rgb(0, 0, 0),
+  });
+
+  cursorY -= 28;
+
+  const options = { timeZone: "America/Sao_Paulo" };
+  const dataHora = new Date().toLocaleString("pt-BR", options);
+
+  page.drawText(`Data/Hora: ${dataHora} (Horário SP)`, {
+    x: 50,
+    y: cursorY,
+    size: 12,
     font: fontRegular,
     color: rgb(0, 0, 0),
   });
 
-  cursorY -= 30;
+  cursorY -= 40;
 
-  // Cabeçalho e dados da tabela
+  // Table headers and data
   const tableHeaders = ["Tipo", "Master/Visa", "Outras"];
   const tableData = [
     ["DÉBITO", "0,49%", "0,49%"],
@@ -134,13 +131,13 @@ app.post("/gerar-pdf", async (req, res) => {
     ["PIX | QR CODE", "0,00% (isento)", "0,00% (isento)"],
   ];
 
-  const colWidths = [240, 130, 130];
+  const colWidths = [250, 130, 130];
   const tableWidth = colWidths.reduce((a, b) => a + b, 0);
   const startX = (width - tableWidth) / 2;
-  const rowHeight = 24;
+  const rowHeight = 28;
   let y = cursorY;
 
-  // Fundo cabeçalho
+  // Header background
   page.drawRectangle({
     x: startX,
     y: y - rowHeight,
@@ -149,18 +146,18 @@ app.post("/gerar-pdf", async (req, res) => {
     color: rgb(0, 0.6, 0.5),
   });
 
-  // Cabeçalhos
+  // Draw headers
   let colX = startX;
   tableHeaders.forEach((header, i) => {
     const cellWidth = colWidths[i];
-    const textWidth = fontBold.widthOfTextAtSize(header, 11);
-    const textHeight = fontBold.heightAtSize(11);
+    const textWidth = fontBold.widthOfTextAtSize(header, 12);
+    const textHeight = fontBold.heightAtSize(12);
     const cellCenterX = colX + cellWidth / 2;
     const cellCenterY = y - (rowHeight / 2) - (textHeight / 4);
     page.drawText(header, {
       x: cellCenterX - textWidth / 2,
       y: cellCenterY,
-      size: 11,
+      size: 12,
       font: fontBold,
       color: rgb(1, 1, 1),
     });
@@ -169,7 +166,7 @@ app.post("/gerar-pdf", async (req, res) => {
 
   y -= rowHeight;
 
-  // Linhas da tabela
+  // Draw table rows
   tableData.forEach((row, idx) => {
     if (idx % 2 === 1) {
       page.drawRectangle({
@@ -184,13 +181,13 @@ app.post("/gerar-pdf", async (req, res) => {
     colX = startX;
     row.forEach((cell, j) => {
       const cellWidth = colWidths[j];
-      const textWidth = fontRegular.widthOfTextAtSize(cell, 10);
-      const textHeight = fontRegular.heightAtSize(10);
+      const textWidth = fontRegular.widthOfTextAtSize(cell, 11);
+      const textHeight = fontRegular.heightAtSize(11);
       const cellCenterY = y - (rowHeight / 2) - (textHeight / 4);
 
       let textX;
       if (j === 0) {
-        textX = colX + 6;
+        textX = colX + 8;
       } else {
         textX = colX + (cellWidth - textWidth) / 2;
       }
@@ -198,7 +195,7 @@ app.post("/gerar-pdf", async (req, res) => {
       page.drawText(cell, {
         x: textX,
         y: cellCenterY,
-        size: 10,
+        size: 11,
         font: fontRegular,
         color: rgb(0, 0, 0),
       });
@@ -209,7 +206,7 @@ app.post("/gerar-pdf", async (req, res) => {
     y -= rowHeight;
   });
 
-  // Linhas horizontais da tabela
+  // Draw horizontal grid lines
   let yLine = cursorY;
   for (let i = 0; i <= tableData.length + 1; i++) {
     page.drawLine({
@@ -221,7 +218,7 @@ app.post("/gerar-pdf", async (req, res) => {
     yLine -= rowHeight;
   }
 
-  // Linhas verticais da tabela
+  // Draw vertical grid lines
   let xLine = startX;
   for (let i = 0; i <= colWidths.length; i++) {
     page.drawLine({
@@ -244,5 +241,5 @@ app.post("/gerar-pdf", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
