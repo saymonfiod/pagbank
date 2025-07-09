@@ -4,6 +4,7 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { format, utcToZonedTime } from "date-fns-tz";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,10 +29,9 @@ app.post("/gerar-pdf", async (req, res) => {
   const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  // Top margin reduced for compact layout
   let cursorY = height - 10;
 
-  // Embed logo
+  // Adiciona logo
   const logoBytes = fs.readFileSync(path.join(__dirname, "logo-pagbank.png"));
   const pngImage = await pdfDoc.embedPng(logoBytes);
   const pngDims = pngImage.scale(0.22);
@@ -43,9 +43,9 @@ app.post("/gerar-pdf", async (req, res) => {
     height: pngDims.height,
   });
 
-  cursorY -= pngDims.height + 20; // Space below logo
+  cursorY -= pngDims.height + 20;
 
-  // Title
+  // Título
   const title = "Proposta Comercial";
   const titleSize = 22;
   const titleWidth = fontBold.widthOfTextAtSize(title, titleSize);
@@ -60,7 +60,7 @@ app.post("/gerar-pdf", async (req, res) => {
 
   cursorY -= 30;
 
-  // Company info
+  // Dados da empresa
   page.drawText(`CNPJ: ${cnpj}`, {
     x: 50,
     y: cursorY,
@@ -91,7 +91,14 @@ app.post("/gerar-pdf", async (req, res) => {
 
   cursorY -= 20;
 
-  const dataHora = `Data/Hora: ${new Date().toLocaleString("pt-BR")} (Horário SP)`;
+  // Data/Hora com fuso horário de São Paulo
+  const timeZone = "America/Sao_Paulo";
+  const now = new Date();
+  const zonedDate = utcToZonedTime(now, timeZone);
+  const formattedDate = format(zonedDate, "dd/MM/yyyy, HH:mm:ss", { timeZone });
+
+  const dataHora = `Data/Hora: ${formattedDate} (Horário SP)`;
+
   page.drawText(dataHora, {
     x: 50,
     y: cursorY,
@@ -102,7 +109,7 @@ app.post("/gerar-pdf", async (req, res) => {
 
   cursorY -= 30;
 
-  // Table headers and data
+  // Cabeçalho e dados da tabela
   const tableHeaders = ["Tipo", "Master/Visa", "Outras"];
   const tableData = [
     ["DÉBITO", "0,49%", "0,49%"],
@@ -133,7 +140,7 @@ app.post("/gerar-pdf", async (req, res) => {
   const rowHeight = 24;
   let y = cursorY;
 
-  // Header background
+  // Fundo cabeçalho
   page.drawRectangle({
     x: startX,
     y: y - rowHeight,
@@ -142,7 +149,7 @@ app.post("/gerar-pdf", async (req, res) => {
     color: rgb(0, 0.6, 0.5),
   });
 
-  // Draw headers
+  // Cabeçalhos
   let colX = startX;
   tableHeaders.forEach((header, i) => {
     const cellWidth = colWidths[i];
@@ -162,7 +169,7 @@ app.post("/gerar-pdf", async (req, res) => {
 
   y -= rowHeight;
 
-  // Draw table rows
+  // Linhas da tabela
   tableData.forEach((row, idx) => {
     if (idx % 2 === 1) {
       page.drawRectangle({
@@ -202,7 +209,7 @@ app.post("/gerar-pdf", async (req, res) => {
     y -= rowHeight;
   });
 
-  // Draw table grid lines horizontal
+  // Linhas horizontais da tabela
   let yLine = cursorY;
   for (let i = 0; i <= tableData.length + 1; i++) {
     page.drawLine({
@@ -214,7 +221,7 @@ app.post("/gerar-pdf", async (req, res) => {
     yLine -= rowHeight;
   }
 
-  // Draw vertical grid lines
+  // Linhas verticais da tabela
   let xLine = startX;
   for (let i = 0; i <= colWidths.length; i++) {
     page.drawLine({
@@ -237,5 +244,5 @@ app.post("/gerar-pdf", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
