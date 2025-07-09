@@ -2,19 +2,72 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Gerar Proposta PagBank</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background-color: #f7f7f7;
+    }
+    form {
+      background: white;
+      padding: 20px;
+      border-radius: 6px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 6px;
+      box-sizing: border-box;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      background-color: #008374;
+      border: none;
+      padding: 12px;
+      font-size: 16px;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #006955;
+    }
+  </style>
 </head>
 <body>
-  <h1>Gerar Proposta PagBank</h1>
-  <form action="/gerar-pdf" method="POST">
-    <label for="cnpj">CNPJ:</label><br />
-    <input type="text" id="cnpj" name="cnpj" required /><br /><br />
+  <form action="/gerar-pdf" method="POST" target="_blank">
+    <h2>Gerar Proposta Comercial PagBank</h2>
+    <label for="cnpj">CNPJ (somente números):</label>
+    <input
+      type="text"
+      id="cnpj"
+      name="cnpj"
+      placeholder="Ex: 10891831000154"
+      pattern="\d{14}"
+      title="Informe 14 números sem pontuação"
+      required
+    />
 
-    <label for="razaoSocial">Razão Social:</label><br />
-    <input type="text" id="razaoSocial" name="razaoSocial" required /><br /><br />
+    <label for="razaoSocial">Razão Social:</label>
+    <input type="text" id="razaoSocial" name="razaoSocial" required />
 
-    <label for="nomeFantasia">Nome Fantasia:</label><br />
-    <input type="text" id="nomeFantasia" name="nomeFantasia" required /><br /><br />
+    <label for="nomeFantasia">Nome Fantasia:</label>
+    <input type="text" id="nomeFantasia" name="nomeFantasia" required />
 
     <button type="submit">Gerar PDF</button>
   </form>
